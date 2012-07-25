@@ -42,10 +42,13 @@ module Mina
     # Returns nothing.
     #
     def run!
-      time, output = measure do
-        ssh commands(:default)
-      end
+      report_time { ssh commands(:default) }
+    end
 
+    # Report time elapsed in the block.
+    # Returns the output of the block.
+    def report_time(&blk)
+      time, output = measure &blk
       print_str "Elapsed time: %.2f seconds" % [time]
       output
     end
@@ -222,6 +225,21 @@ module Mina
       result = yield
       new_code, @commands = @commands, old
       result
+    end
+
+    # Starts a new block where #commands are collected, to be executed inside `path`.
+    #
+    # Returns nothing.
+    #
+    #   in_directory './webapp' do
+    #     queue "./reload"
+    #   end
+    #
+    #   commands.should == ['cd ./webapp && (./reload && true)']
+    #
+    def in_directory(path, &blk)
+      isolated_commands = isolate { yield; commands }
+      isolated_commands.each { |cmd| queue "(cd #{path} && (#{cmd}))" }
     end
 
     # Defines instructions on how to do a certain thing.
