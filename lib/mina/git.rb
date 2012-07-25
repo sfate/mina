@@ -38,10 +38,8 @@ namespace :git do
 
     status = %[
       echo "-----> Using this git commit" &&
-      echo &&
-      #{echo_cmd %[git log --format="%aN (%h):%n> %s" -n 1]} &&
-      #{echo_cmd %[rm -rf .git]} &&
-      echo
+      #{echo_cmd %[git log --format="%n%aN (%h):%n> %s%n" -n 1]} &&
+      #{echo_cmd %[rm -rf .git]}
     ]
 
     queue init + clone + status
