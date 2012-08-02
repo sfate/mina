@@ -9,24 +9,17 @@ namespace :git do
       exit
     end
 
-    init = %[
-      if [ ! -d "#{deploy_to}/scm/objects" ]; then
-        echo "-----> Cloning the Git repository"
-        #{echo_cmd %[git clone "#{repository!}" "#{deploy_to}/scm" --bare]}
-    ]
-
     clone = if commit?
       %[
-        else
-          echo "-----> Fetching new git commits"
-          #{echo_cmd %[(cd "#{deploy_to}/scm" && git fetch "#{repository!}")]}
-        fi &&
         echo "-----> Using git commit '#{commit}'" &&
-        #{echo_cmd %[git clone "#{deploy_to}/scm" . --recursive]} &&
+        #{echo_cmd %[git clone "#{repository!}" . --recursive]} &&
         #{echo_cmd %[git checkout -b current_release "#{commit}" --force]} &&
       ]
     else
       %{
+        if [ ! -d "#{deploy_to}/scm/objects" ]; then
+          echo "-----> Cloning the Git repository"
+          #{echo_cmd %[git clone "#{repository!}" "#{deploy_to}/scm" --bare]}
         else
           echo "-----> Fetching new git commits"
           #{echo_cmd %[(cd "#{deploy_to}/scm" && git fetch "#{repository!}" "#{branch}:#{branch}" --force)]}
@@ -42,6 +35,6 @@ namespace :git do
       #{echo_cmd %[rm -rf .git]}
     ]
 
-    queue init + clone + status
+    queue clone + status
   end
 end
